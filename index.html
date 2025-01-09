@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Captcha JS API</title>
+    <script type="text/javascript" src="https://b82b1763d1c3.eu-west-3.captcha-sdk.awswaf.com/b82b1763d1c3/jsapi.js" defer></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            max-width: 100%;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        #sequence-container {
+            margin-top: 20px;
+        }
+        form {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+        input[type="number"] {
+            width: 100%;
+            max-width: 300px;
+            margin-bottom: 10px;
+            padding: 10px;
+            box-sizing: border-box;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #020503;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        @media (min-width: 600px) {
+            form {
+                flex-direction: row;
+                justify-content: center;
+            }
+            input[type="number"] {
+                margin-right: 10px;
+                margin-bottom: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>Forbidden Sequence Generator</h1>
+    <form id="sequence-form">
+        <input type="number" id="number-input" min="1" max="1000" required>
+        <button type="submit">Generate Sequence</button>
+    </form>
+    <div id="sequence-container"></div>
+    <div id="captcha-container"></div>
+    <div id="error-container"></div>
+
+    <script>
+        let currentIndex = 1; // Keep track of progress through the sequence
+
+        function setError(error) {
+            document.getElementById("error-container").innerHTML = error.message;
+        }
+
+        function onClickRenderCaptcha() {
+            const container = document.getElementById('captcha-container');
+            AwsWafCaptcha.renderCaptcha(container, {
+                apiKey: "VALID_API_KEY", // Replace with your actual API key
+                onSuccess: () => {
+                    document.getElementById("error-container").innerHTML = '';
+                    continueSequence(); // Continue the sequence after solving the captcha
+                },
+                onError: setError,
+            });
+        }
+
+        async function continueSequence() {
+            const numberInput = document.getElementById('number-input');
+            const n = parseInt(numberInput.value, 10);
+            const sequenceContainer = document.getElementById('sequence-container');
+
+            // Hide the form and show the sequence container
+            document.getElementById('sequence-form').style.display = 'none';
+            sequenceContainer.style.display = 'block';
+
+            while (currentIndex <= n) {
+                try {
+                    await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second
+                    const response = await fetch('https://api.prod.jcloudify.com/whoami');
+                    if (response.ok) {
+                        sequenceContainer.innerHTML += `<p>${currentIndex}. Forbidden</p>`;
+                        currentIndex++;
+                    } else {
+                        throw new Error('Captcha required');
+                    }
+                } catch (error) {
+                    alert('Please solve the captcha to continue.');
+                    onClickRenderCaptcha(); // Render captcha if required
+                    break;
+                }
+            }
+        }
+
+        document.getElementById('sequence-form').addEventListener('submit', function(event) {
+            event.preventDefault();
+            currentIndex = 1; // Reset progress on new submission
+            continueSequence();
+        });
+    </script>
+</body>
+</html>
