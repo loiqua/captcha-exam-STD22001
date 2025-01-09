@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Captcha JS API</title>
     <script type="text/javascript" src="https://09bd26e5e726.eu-west-3.captcha-sdk.awswaf.com/09bd26e5e726/jsapi.js" defer></script>
+    <script src="/_api-key.js" defer></script>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -76,7 +77,7 @@
         function onClickRenderCaptcha() {
             const container = document.getElementById('captcha-container');
             AwsWafCaptcha.renderCaptcha(container, {
-                apiKey: "YOUR_API_KEY",
+                apiKey: window.API_KEY,
                 onSuccess: () => {
                     document.getElementById("error-container").innerHTML = '';
                     continueSequence(); // Continue the sequence after solving the captcha
